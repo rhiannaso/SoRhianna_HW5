@@ -1,3 +1,11 @@
+/* 
+    Skeleton code copied from Discussion Session Week 3 Slides by Michael Nekrasov
+    - includes main function and general set up of server, connection, and socket
+      - num_connections, bind(), listen(), accept(), close()
+    - includes set up of structs and basic read/send commands
+      - sockaddr_in (server/client) set-up, layout/format of read/send commands
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
@@ -30,12 +38,12 @@ int main(int argc, char * argv[]) {
       printf("Ready to start game? (y/n): ");
       fgets(message, 50, stdin);
 
+      // Add delimiter for string
       if((message[strlen(message)-1] == '\n') && strlen(message) > 0) {
         message[strlen(message)-1] = '\0';
       }
 
       if(strcmp(message, "y") == 0) { // If client is ready to play 
-	printf("%s\n", message);
 	gamePlay = 1;
 	send(socket_id, "0", strlen(message), 0);
       } else if (strcmp(message, "n") == 0) {  // If client is not ready to play, terminate connection 
@@ -52,19 +60,36 @@ int main(int argc, char * argv[]) {
       check = read(socket_id, message, 50); // Read game packet from server
 
       message[check] = '\0';
-      printf("From server: %s\n", message);
+
+      // If too many connections from server, close connection
+      if(strcmp(message,"Server overloaded.") == 0) {
+	printf("%s\n", message);
+	break;
+      }
 
       char c[2];
       c[0] = message[0];
       c[1] = '\0';
+      char finalMsg[50] = {0};
       
       if(strcmp(c, "0")) { // If the server is sending a message 
 	int length = atoi(c);
+	printf("The word was ");
 	for(int i = 0; i < length; i++) {
 	  if(i != length-1) {
 	    printf("%c", message[1+i]);
 	  } else {
 	    printf("%c\n", message[1+i]);
+	  }
+	}
+	read(socket_id, finalMsg, 50);
+	c[0] = finalMsg[0];
+	length = atoi(c);
+	for(int i = 0; i < length; i++) {
+	  if(i != length-1) {
+	    printf("%c", finalMsg[1+i]);
+	  } else {
+	    printf("%c\n", finalMsg[1+i]);
 	  }
 	}
 	printf("Game Over!\n");
